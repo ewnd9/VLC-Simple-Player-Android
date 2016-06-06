@@ -1,3 +1,7 @@
+.idea/
+*.iml
+gradle/wrapper/gradle-wrapper.properties
+
 # Built application files
 *.apk
 *.ap_
