@@ -46,6 +46,9 @@ import java.lang.ref.WeakReference;
  */
 public class FullscreenVlcPlayer extends Activity implements SurfaceHolder.Callback, IVideoPlayer {
 
+    public static final String EXTRA_URL = "FullscreenVlcPlayer.EXTRA_URL";
+    public static final String EXTRA_HIDE_SEEK_BAR = "FullscreenVlcPlayer.EXTRA_HIDE_SEEK_BAR";
+
     private String              urlToStream;
 
     // Display Surface
@@ -64,6 +67,7 @@ public class FullscreenVlcPlayer extends Activity implements SurfaceHolder.Callb
     private SeekBar             vlcSeekbar;
     private TextView            vlcDuration;
     private TextView            overlayTitle;
+    private View                vlcSeekBarLayout;
 
     // media player
     private LibVLC              libvlc;
@@ -77,7 +81,8 @@ public class FullscreenVlcPlayer extends Activity implements SurfaceHolder.Callb
 
         // Retrieve our url
         Bundle b = getIntent().getExtras();
-        urlToStream = b.getString("url", null);
+        urlToStream = b.getString(EXTRA_URL, null);
+        boolean hideSeekBar = b.getBoolean(EXTRA_HIDE_SEEK_BAR, false);
 
 
         // HIDE THE ACTION BAR
@@ -96,6 +101,11 @@ public class FullscreenVlcPlayer extends Activity implements SurfaceHolder.Callb
         vlcButtonPlayPause = (ImageView) findViewById(R.id.vlc_button_play_pause);
         vlcSeekbar = (SeekBar) findViewById(R.id.vlc_seekbar);
         vlcDuration = (TextView) findViewById(R.id.vlc_duration);
+
+        vlcSeekBarLayout = findViewById(R.id.vlc_seek_bar_layout);
+        if (hideSeekBar) {
+            vlcSeekBarLayout.setVisibility(View.INVISIBLE);
+        }
 
         overlayTitle = (TextView) findViewById(R.id.vlc_overlay_title);
         overlayTitle.setText(urlToStream);
