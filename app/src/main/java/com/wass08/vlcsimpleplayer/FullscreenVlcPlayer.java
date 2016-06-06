@@ -342,6 +342,8 @@ public class FullscreenVlcPlayer extends Activity implements SurfaceHolder.Callb
             list.clear();
             list.add(new Media(libvlc, LibVLC.PathToURI(media)), false);
             libvlc.playIndex(0);
+
+            mPositionHandler.postDelayed(mPositionHandlerTask, 1000 * 5); // 5 seconds
         } catch (Exception e) {
             Toast.makeText(this, "Could not create Vlc Player", Toast.LENGTH_LONG).show();
         }
@@ -367,6 +369,19 @@ public class FullscreenVlcPlayer extends Activity implements SurfaceHolder.Callb
      * Events
      * ***********
      */
+
+    private Handler mPositionHandler = new Handler();
+    private static int POSITION_UPDATE_INTERVAL = 1000 * 60; // 1 min
+
+    private Runnable mPositionHandlerTask = new Runnable() {
+        @Override
+        public void run() {
+            if (holder != null) {
+                VLCPlayer.sendPositionToReact(libvlc.getPosition());
+                mPositionHandler.postDelayed(mPositionHandlerTask, POSITION_UPDATE_INTERVAL);
+            }
+        }
+    };
 
     private Handler mHandler = new MyHandler(this);
 
