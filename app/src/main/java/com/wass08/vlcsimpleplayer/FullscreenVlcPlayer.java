@@ -1,5 +1,9 @@
 package com.wass08.vlcsimpleplayer;
 
+import com.wass08.vlcsimpleplayer.translator.Api;
+import com.wass08.vlcsimpleplayer.translator.TranslationArrayAdapter;
+import com.wass08.vlcsimpleplayer.translator.TranslationResult;
+import com.wass08.vlcsimpleplayer.translator.Translator;
 import com.wass08.vlcsimpleplayer.util.SystemUiHider;
 
 import android.annotation.TargetApi;
@@ -21,9 +25,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -36,6 +42,11 @@ import org.videolan.libvlc.Media;
 import org.videolan.libvlc.MediaList;
 
 import java.lang.ref.WeakReference;
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 
 /**
@@ -61,6 +72,10 @@ public class FullscreenVlcPlayer extends Activity implements SurfaceHolder.Callb
 
     // Editor
     private LinearLayout        editorContainer;
+    private EditText            editorInput;
+    private ListView            editorListView;
+    private TranslationArrayAdapter editorAdapter;
+    private Translator          translator;
 
     // Overlay / Controls
 
@@ -103,6 +118,14 @@ public class FullscreenVlcPlayer extends Activity implements SurfaceHolder.Callb
 
         // editor
         editorContainer = (LinearLayout) findViewById(R.id.editor_container);
+        editorInput = (EditText) findViewById(R.id.editor_input);
+
+        editorAdapter = new TranslationArrayAdapter(this);
+
+        editorListView = (ListView) findViewById(R.id.editor_list_view);
+        editorListView.setAdapter(editorAdapter);
+
+        translator = new Translator(editorInput, editorAdapter);
 
         // OVERLAY / CONTROLS
         vlcOverlay = (FrameLayout) findViewById(R.id.vlc_overlay);
@@ -120,7 +143,6 @@ public class FullscreenVlcPlayer extends Activity implements SurfaceHolder.Callb
 
         // AUTOSTART
         playMovie();
-
     }
 
     private void showOverlay() {

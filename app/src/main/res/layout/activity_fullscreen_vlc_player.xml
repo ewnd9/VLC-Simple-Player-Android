@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/black"
+    android:background="@android:color/white"
     tools:context="com.wass08.vlcsimpleplayer.FullscreenVlcPlayer">
 
     <LinearLayout
@@ -89,14 +89,24 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:orientation="vertical"
             android:visibility="gone"
             tools:visibility="visible"
-            android:id="@+id/editor_container">
+            android:id="@+id/editor_container"
+            android:padding="10dp">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <EditText
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Hello World" />
+                android:id="@+id/editor_input"
+                android:textColor="@android:color/black"
+                android:layout_marginBottom="10dp"
+                android:hint="Translate Text" />
+
+            <ListView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/editor_list_view" />
 
         </LinearLayout>
     </LinearLayout>
