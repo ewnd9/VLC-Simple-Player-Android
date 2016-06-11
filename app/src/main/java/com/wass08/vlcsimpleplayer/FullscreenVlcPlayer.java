@@ -46,6 +46,8 @@ import java.lang.ref.WeakReference;
  */
 public class FullscreenVlcPlayer extends Activity implements SurfaceHolder.Callback, IVideoPlayer {
 
+    private static final String TAG = "ReactNativeJS";
+
     public static final String EXTRA_URL = "FullscreenVlcPlayer.EXTRA_URL";
     public static final String EXTRA_HIDE_SEEK_BAR = "FullscreenVlcPlayer.EXTRA_HIDE_SEEK_BAR";
 
@@ -53,8 +55,12 @@ public class FullscreenVlcPlayer extends Activity implements SurfaceHolder.Callb
 
     // Display Surface
     private LinearLayout        vlcContainer;
+    private FrameLayout         vlcSurfaceContainer;
     private SurfaceView         mSurface;
     private SurfaceHolder       holder;
+
+    // Editor
+    private LinearLayout        editorContainer;
 
     // Overlay / Controls
 
@@ -84,7 +90,6 @@ public class FullscreenVlcPlayer extends Activity implements SurfaceHolder.Callb
         urlToStream = b.getString(EXTRA_URL, null);
         boolean hideSeekBar = b.getBoolean(EXTRA_HIDE_SEEK_BAR, false);
 
-
         // HIDE THE ACTION BAR
         getActionBar().hide();
 
@@ -93,8 +98,11 @@ public class FullscreenVlcPlayer extends Activity implements SurfaceHolder.Callb
 
         // VLC
         vlcContainer = (LinearLayout) findViewById(R.id.vlc_container);
+        vlcSurfaceContainer = (FrameLayout) findViewById(R.id.vlc_surface_container);
         mSurface = (SurfaceView) findViewById(R.id.vlc_surface);
 
+        // editor
+        editorContainer = (LinearLayout) findViewById(R.id.editor_container);
 
         // OVERLAY / CONTROLS
         vlcOverlay = (FrameLayout) findViewById(R.id.vlc_overlay);
@@ -235,6 +243,24 @@ public class FullscreenVlcPlayer extends Activity implements SurfaceHolder.Callb
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         setSize(mVideoWidth, mVideoHeight);
+
+        ViewGroup.LayoutParams lp = vlcSurfaceContainer.getLayoutParams();
+        boolean isPortrait = isPortrait();
+        int editorContainerVisibility;
+
+        if (isPortrait) {
+            lp.width = ViewGroup.LayoutParams.MATCH_PARENT;
+            lp.height = mVideoHeight;
+            editorContainerVisibility = View.VISIBLE;
+        } else {
+            lp.width = ViewGroup.LayoutParams.MATCH_PARENT;
+            lp.height = ViewGroup.LayoutParams.MATCH_PARENT;
+            editorContainerVisibility = View.GONE;
+        }
+
+        Log.v(TAG, "isPortrait " + isPortrait);
+        vlcSurfaceContainer.setLayoutParams(lp);
+        editorContainer.setVisibility(editorContainerVisibility);
     }
 
     @Override
@@ -272,6 +298,10 @@ public class FullscreenVlcPlayer extends Activity implements SurfaceHolder.Callb
     public void surfaceDestroyed(SurfaceHolder surfaceholder) {
     }
 
+    private boolean isPortrait() {
+        return getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
+    }
+
     private void setSize(int width, int height) {
         mVideoWidth = width;
         mVideoHeight = height;
@@ -284,7 +314,7 @@ public class FullscreenVlcPlayer extends Activity implements SurfaceHolder.Callb
 
         // getWindow().getDecorView() doesn't always take orientation into
         // account, we have to correct the values
-        boolean isPortrait = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
+        boolean isPortrait = isPortrait();
         if (w > h && isPortrait || w < h && !isPortrait) {
             int i = w;
             w = h;
