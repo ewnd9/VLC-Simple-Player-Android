@@ -1,36 +1,27 @@
 package com.wass08.vlcsimpleplayer;
 
-import com.wass08.vlcsimpleplayer.translator.Api;
 import com.wass08.vlcsimpleplayer.translator.TranslationArrayAdapter;
-import com.wass08.vlcsimpleplayer.translator.TranslationResult;
 import com.wass08.vlcsimpleplayer.translator.Translator;
 import com.wass08.vlcsimpleplayer.util.SystemUiHider;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
-import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.PixelFormat;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -42,11 +33,6 @@ import org.videolan.libvlc.Media;
 import org.videolan.libvlc.MediaList;
 
 import java.lang.ref.WeakReference;
-import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 
 /**
@@ -71,6 +57,7 @@ public class FullscreenVlcPlayer extends Activity implements SurfaceHolder.Callb
     private SurfaceHolder       holder;
 
     // Editor
+    // @TODO implement as a fragment, so it can be swapped to others like comments, description, etc...
     private LinearLayout        editorContainer;
     private EditText            editorInput;
     private ListView            editorListView;
@@ -264,25 +251,8 @@ public class FullscreenVlcPlayer extends Activity implements SurfaceHolder.Callb
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        setSize(mVideoWidth, mVideoHeight);
+        processSizeChange(mVideoWidth, mVideoHeight);
 
-        ViewGroup.LayoutParams lp = vlcSurfaceContainer.getLayoutParams();
-        boolean isPortrait = isPortrait();
-        int editorContainerVisibility;
-
-        if (isPortrait) {
-            lp.width = ViewGroup.LayoutParams.MATCH_PARENT;
-            lp.height = mVideoHeight;
-            editorContainerVisibility = View.VISIBLE;
-        } else {
-            lp.width = ViewGroup.LayoutParams.MATCH_PARENT;
-            lp.height = ViewGroup.LayoutParams.MATCH_PARENT;
-            editorContainerVisibility = View.GONE;
-        }
-
-        Log.v(TAG, "isPortrait " + isPortrait);
-        vlcSurfaceContainer.setLayoutParams(lp);
-        editorContainer.setVisibility(editorContainerVisibility);
     }
 
     @Override
@@ -324,7 +294,7 @@ public class FullscreenVlcPlayer extends Activity implements SurfaceHolder.Callb
         return getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
     }
 
-    private void setSize(int width, int height) {
+    private void processSizeChange(int width, int height) {
         mVideoWidth = width;
         mVideoHeight = height;
         if (mVideoWidth * mVideoHeight <= 1)
@@ -356,11 +326,27 @@ public class FullscreenVlcPlayer extends Activity implements SurfaceHolder.Callb
             holder.setFixedSize(mVideoWidth, mVideoHeight);
 
         // set display size
-        ViewGroup.LayoutParams lp = mSurface.getLayoutParams();
-        lp.width = w;
-        lp.height = h;
-        mSurface.setLayoutParams(lp);
+        ViewGroup.LayoutParams lp1 = mSurface.getLayoutParams();
+        lp1.width = w;
+        lp1.height = h;
+        mSurface.setLayoutParams(lp1);
         mSurface.invalidate();
+
+        ViewGroup.LayoutParams lp2 = vlcSurfaceContainer.getLayoutParams();
+        int editorContainerVisibility;
+
+        if (isPortrait) {
+            lp2.width = ViewGroup.LayoutParams.MATCH_PARENT;
+            lp2.height = mVideoHeight;
+            editorContainerVisibility = View.VISIBLE;
+        } else {
+            lp2.width = ViewGroup.LayoutParams.MATCH_PARENT;
+            lp2.height = ViewGroup.LayoutParams.MATCH_PARENT;
+            editorContainerVisibility = View.GONE;
+        }
+
+        vlcSurfaceContainer.setLayoutParams(lp2);
+        editorContainer.setVisibility(editorContainerVisibility);
     }
 
     @Override
@@ -460,7 +446,7 @@ public class FullscreenVlcPlayer extends Activity implements SurfaceHolder.Callb
 
             // Player events
             if (msg.what == VideoSizeChanged) {
-                player.setSize(msg.arg1, msg.arg2);
+                player.processSizeChange(msg.arg1, msg.arg2);
                 return;
             }
 
