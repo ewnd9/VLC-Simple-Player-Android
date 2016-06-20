@@ -23,6 +23,7 @@ package org.videolan.libvlc;
 import java.util.ArrayList;
 
 import android.os.Bundle;
+import android.util.Log;
 
 /**
  * Java/JNI wrapper for the libvlc_media_list_t structure.
@@ -200,12 +201,17 @@ public class MediaList {
     public String[] getMediaOptions(int position) {
         boolean noHardwareAcceleration = mLibVLC.getHardwareAcceleration() == 0;
         boolean noVideo = false;
-        if (isValid(position))
-        {
-            if (!noHardwareAcceleration)
+
+        int networkCache = mLibVLC.getNetworkCaching();
+
+        if (isValid(position)) {
+            if (!noHardwareAcceleration) {
                 noHardwareAcceleration = mInternalList.get(position).noHardwareAcceleration;
+            }
+
             noVideo = mInternalList.get(position).noVideo;
         }
+
         ArrayList<String> options = new ArrayList<String>();
 
         if (!noHardwareAcceleration) {
@@ -218,13 +224,17 @@ public class MediaList {
              * for 320x170 H.264, a few packets less on higher resolutions.
              * On Nexus S, the decoder latency seems to be about 7 packets.
              */
-            options.add(":file-caching=1500");
-            options.add(":network-caching=1500");
             options.add(":codec=mediacodec,iomx,all");
         }
-        if (noVideo)
-            options.add(":no-video");
 
+        if (noVideo) {
+            options.add(":no-video");
+        }
+
+        options.add(":file-caching=" + networkCache);
+        options.add(":network-caching=" + networkCache);
+
+        Log.v(TAG, "options: " + options);
         return options.toArray(new String[options.size()]);
     }
 

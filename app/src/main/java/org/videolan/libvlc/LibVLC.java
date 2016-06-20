@@ -73,7 +73,7 @@ public class LibVLC {
     private boolean verboseMode = true;
     private float[] equalizer = null;
     private boolean frameSkip = false;
-    private int networkCaching = 0;
+    private int networkCaching = 5000;
 
     /** Native crash handler */
     private OnNativeCrashListener mOnNativeCrashListener;

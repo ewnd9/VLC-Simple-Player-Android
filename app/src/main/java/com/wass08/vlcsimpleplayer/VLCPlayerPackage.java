@@ -1,5 +1,7 @@
 package com.wass08.vlcsimpleplayer;
 
+import android.app.Activity;
+
 import com.facebook.react.ReactPackage;
 import com.facebook.react.bridge.JavaScriptModule;
 import com.facebook.react.bridge.NativeModule;
@@ -7,10 +9,17 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.uimanager.ViewManager;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 public class VLCPlayerPackage implements ReactPackage {
+
+    private Activity activity;
+
+    public VLCPlayerPackage(Activity activity) {
+        this.activity = activity;
+    }
 
     @Override
     public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
@@ -25,8 +34,11 @@ public class VLCPlayerPackage implements ReactPackage {
     }
 
     @Override
-    public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
-        return Collections.emptyList();
+    public List<ViewManager> createViewManagers(
+            ReactApplicationContext reactContext) {
+        return Arrays.<ViewManager>asList(
+                new ReactPlayerManager(activity)
+        );
     }
 
 }
