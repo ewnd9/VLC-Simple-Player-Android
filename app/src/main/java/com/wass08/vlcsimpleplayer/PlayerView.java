@@ -54,6 +54,7 @@ public class PlayerView extends FrameLayout implements SurfaceHolder.Callback, I
 
     private FrameLayout vlcOverlay;
     private ImageView vlcButtonPlayPause;
+    private ImageView vlcMarkButton;
     private Handler handlerOverlay;
     private Runnable runnableOverlay;
     private TextView overlayTitle;
@@ -117,7 +118,10 @@ public class PlayerView extends FrameLayout implements SurfaceHolder.Callback, I
         mSurface = (SurfaceView) findViewById(R.id.vlc_surface);
 
         vlcOverlay = (FrameLayout) findViewById(R.id.vlc_overlay);
+
         vlcButtonPlayPause = (ImageView) findViewById(R.id.vlc_button_play_pause);
+        vlcMarkButton = (ImageView) findViewById(R.id.vlc_button_mark);
+
         vlcSeekBar = (SeekBar) findViewById(R.id.vlc_seekbar);
         vlcDuration = (TextView) findViewById(R.id.vlc_duration);
 
@@ -143,11 +147,19 @@ public class PlayerView extends FrameLayout implements SurfaceHolder.Callback, I
             public void onClick(View view) {
                 if (libvlc.isPlaying()) {
                     libvlc.pause();
-                    vlcButtonPlayPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_action_play_over_video));
+                    vlcButtonPlayPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_circle_outline_black_24dp));
                 } else {
                     libvlc.play();
-                    vlcButtonPlayPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_action_pause_over_video));
+                    vlcButtonPlayPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_circle_outline_black_24dp));
                 }
+            }
+        });
+
+        // MARK
+        vlcMarkButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                VLCPlayer.sendMarkToReact(libvlc.getTime(), libvlc.getLength());
             }
         });
 
@@ -389,13 +401,13 @@ public class PlayerView extends FrameLayout implements SurfaceHolder.Callback, I
      * ***********
      */
     private Handler mPositionHandler = new Handler();
-    private static int POSITION_UPDATE_INTERVAL = 1000 * 60; // 1 min
+    private static int POSITION_UPDATE_INTERVAL = 1000 * 30; // 30 seconds
 
     private Runnable mPositionHandlerTask = new Runnable() {
         @Override
         public void run() {
             if (holder != null) {
-                VLCPlayer.sendPositionToReact(libvlc.getPosition());
+                VLCPlayer.sendPositionToReact(libvlc.getTime(), libvlc.getLength());
                 mPositionHandler.postDelayed(mPositionHandlerTask, POSITION_UPDATE_INTERVAL);
             }
         }
@@ -448,7 +460,7 @@ public class PlayerView extends FrameLayout implements SurfaceHolder.Callback, I
 
     public void setHideSeekBar(boolean hideSeekBar) {
         this.hideSeekBar = hideSeekBar;
-        this.vlcSeekBarLayout.setVisibility(hideSeekBar ? View.GONE : View.VISIBLE);
+        this.vlcSeekBarLayout.setVisibility(hideSeekBar ? View.INVISIBLE : View.VISIBLE);
     }
 
     public int getVideoWidth() {

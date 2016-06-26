@@ -2,6 +2,9 @@
 *.iml
 gradle/wrapper/gradle-wrapper.properties
 
+gradlew
+gradle*
+
 # Built application files
 *.apk
 *.ap_

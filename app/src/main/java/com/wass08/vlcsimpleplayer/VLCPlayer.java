@@ -40,12 +40,23 @@ public class VLCPlayer extends ReactContextBaseJavaModule {
         VLCPlayer.context.startActivity(toFullscreen);
     }
 
-    public static void sendPositionToReact(float position) {
+    public static void sendPositionToReact(long position, long duration) {
         WritableMap params = Arguments.createMap();
-        params.putDouble("position", position);
+        params.putString("position", Long.toString(position * 1000));
+        params.putString("duration", Long.toString(duration * 1000));
 
         VLCPlayer.context
             .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
             .emit("positionUpdate", params);
+    }
+
+    public static void sendMarkToReact(long position, long duration) {
+        WritableMap params = Arguments.createMap();
+        params.putString("position", Long.toString(position * 1000));
+        params.putString("duration", Long.toString(duration * 1000));
+
+        VLCPlayer.context
+            .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+            .emit("markEmit", params);
     }
 }

@@ -31,7 +31,7 @@
                 android:id="@+id/vlc_button_play_pause"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
-                android:src="@drawable/ic_action_pause_over_video" />
+                android:src="@drawable/ic_pause_circle_outline_black_24dp" />
 
             <LinearLayout
                 android:id="@+id/vlc_seek_bar_layout"
@@ -53,6 +53,12 @@
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     android:textColor="@android:color/white" />
             </LinearLayout>
+
+            <ImageView
+                android:id="@+id/vlc_button_mark"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:src="@drawable/ic_bookmark_border_black_24dp" />
         </LinearLayout>
 
         <TextView
