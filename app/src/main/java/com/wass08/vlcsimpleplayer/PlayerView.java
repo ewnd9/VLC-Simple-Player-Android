@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.graphics.PixelFormat;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
@@ -18,16 +17,14 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReactContext;
-import com.facebook.react.bridge.WritableMap;
+import com.wass08.vlcsimpleplayer.handlers.VlcHandler;
 import com.wass08.vlcsimpleplayer.util.Callback;
 
 import org.videolan.libvlc.EventHandler;
@@ -36,8 +33,6 @@ import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.Media;
 import org.videolan.libvlc.MediaList;
 
-import java.lang.ref.WeakReference;
-
 /**
  * Created by ewnd9 on 20.06.16.
  */
@@ -45,7 +40,7 @@ public class PlayerView extends FrameLayout implements SurfaceHolder.Callback, I
 
     private static final String TAG = "ReactNativeJS";
 
-    private final static int VIDEO_SIZE_CHANGED = -1;
+    public final static int VIDEO_SIZE_CHANGED = -1;
     private static final long TIME_TO_DISAPPEAR = 3000;
 
     // Display Surface
@@ -342,7 +337,7 @@ public class PlayerView extends FrameLayout implements SurfaceHolder.Callback, I
         setSize(mVideoWidth, mVideoHeight);
     }
 
-    private void setSize(int width, int height) {
+    public void setSize(int width, int height) {
         mVideoWidth = width;
         mVideoHeight = height;
 
@@ -413,45 +408,7 @@ public class PlayerView extends FrameLayout implements SurfaceHolder.Callback, I
         }
     };
 
-    private Handler mHandler = new MyHandler(this);
-
-    private static class MyHandler extends Handler {
-
-        private WeakReference<PlayerView> mOwner;
-
-        public MyHandler(PlayerView owner) {
-            mOwner = new WeakReference<>(owner);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            PlayerView playerView = mOwner.get();
-
-            // Player events
-            if (msg.what == VIDEO_SIZE_CHANGED) {
-                playerView.setSize(msg.arg1, msg.arg2);
-                return;
-            }
-
-            // Libvlc events
-            Bundle b = msg.getData();
-
-            switch (b.getInt("event")) {
-                case EventHandler.MediaPlayerEndReached:
-                    playerView.releasePlayer();
-                    break;
-                case EventHandler.MediaPlayerPlaying:
-                    Log.v(TAG, "MediaPlayerPlaying");
-                    break;
-                case EventHandler.MediaPlayerPaused:
-                case EventHandler.MediaPlayerStopped:
-                case EventHandler.MediaPlayerBuffering:
-                    Log.v(TAG, "MediaPlayerBuffering");
-                default:
-                    break;
-            }
-        }
-    }
+    private Handler mHandler = new VlcHandler(this);
 
     public void setTitle(String title) {
         this.title = title;

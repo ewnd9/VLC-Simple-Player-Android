@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:background="@android:color/black"
     android:orientation="vertical"
     android:visibility="visible">
@@ -17,7 +17,6 @@
         android:id="@+id/vlc_overlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#69000000"
         android:padding="10dp">
 
         <LinearLayout
@@ -63,16 +62,15 @@
 
         <TextView
             android:id="@+id/vlc_overlay_title"
-            android:layout_width="fill_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:layout_gravity="left|center_horizontal"
             android:ellipsize="marquee"
             android:gravity="center_horizontal"
             android:singleLine="true"
-            android:text=""
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:textColor="@android:color/white"
-            android:textStyle="italic" />
+            tools:text="Title s01e01" />
 
     </FrameLayout>
 

@@ -27,11 +27,12 @@ public class VLCPlayer extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void play(String path) {
+    public void play(String path, String title) {
         Intent toFullscreen = new Intent(VLCPlayer.context, FullscreenVlcPlayer.class);
         Bundle b = new Bundle();
 
         b.putString(FullscreenVlcPlayer.EXTRA_URL, path);
+        b.putString(FullscreenVlcPlayer.EXTRA_TITLE, title);
         b.putBoolean(FullscreenVlcPlayer.EXTRA_HIDE_SEEK_BAR, true);
 
         toFullscreen.putExtras(b); //Put your id to your next Intent

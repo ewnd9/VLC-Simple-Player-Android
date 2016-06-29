@@ -1,39 +1,15 @@
 package com.wass08.vlcsimpleplayer;
 
-import com.wass08.vlcsimpleplayer.translator.TranslationArrayAdapter;
-import com.wass08.vlcsimpleplayer.translator.Translator;
 import com.wass08.vlcsimpleplayer.util.Callback;
 import com.wass08.vlcsimpleplayer.util.SystemUiHider;
 
 import android.app.Activity;
 import android.content.res.Configuration;
-import android.graphics.PixelFormat;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.util.Log;
-import android.view.Gravity;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.EditText;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListView;
-import android.widget.SeekBar;
-import android.widget.TextView;
 import android.widget.Toast;
-
-import org.videolan.libvlc.EventHandler;
-import org.videolan.libvlc.IVideoPlayer;
-import org.videolan.libvlc.LibVLC;
-import org.videolan.libvlc.Media;
-import org.videolan.libvlc.MediaList;
-
-import java.lang.ref.WeakReference;
 
 
 /**
@@ -47,6 +23,7 @@ public class FullscreenVlcPlayer extends Activity {
     private static final String TAG = "ReactNativeJS";
 
     public static final String EXTRA_URL = "FullscreenVlcPlayer.EXTRA_URL";
+    public static final String EXTRA_TITLE = "FullscreenVlcPlayer.EXTRA_TITLE";
     public static final String EXTRA_HIDE_SEEK_BAR = "FullscreenVlcPlayer.EXTRA_HIDE_SEEK_BAR";
 
     private LinearLayout vlcContainer;
@@ -62,13 +39,14 @@ public class FullscreenVlcPlayer extends Activity {
         Bundle b = getIntent().getExtras();
 
         String urlToStream = b.getString(EXTRA_URL, null);
+        String title = b.getString(EXTRA_TITLE, null);
         boolean hideSeekBar = b.getBoolean(EXTRA_HIDE_SEEK_BAR, false);
 
         vlcContainer = (LinearLayout) findViewById(R.id.vlc_container);
 
         // AUTOSTART
         playerView = (PlayerView) findViewById(R.id.player_view);
-        playerView.init(urlToStream, hideSeekBar, "URL TO STREAM", new Callback<Boolean>() {
+        playerView.init(urlToStream, hideSeekBar, title, new Callback<Boolean>() {
             @Override
             public void call(Boolean fullscreen) {
                 WindowManager.LayoutParams attrs = getWindow().getAttributes();
