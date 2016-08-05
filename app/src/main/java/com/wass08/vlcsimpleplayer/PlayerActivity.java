@@ -4,6 +4,10 @@ import com.wass08.vlcsimpleplayer.util.Callback;
 import com.wass08.vlcsimpleplayer.util.SystemUiHider;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.View;
@@ -18,23 +22,36 @@ import android.widget.Toast;
  *
  * @see SystemUiHider
  */
-public class FullscreenVlcPlayer extends Activity {
+public class PlayerActivity extends Activity {
 
     private static final String TAG = "ReactNativeJS";
 
-    public static final String EXTRA_URL = "FullscreenVlcPlayer.EXTRA_URL";
-    public static final String EXTRA_TITLE = "FullscreenVlcPlayer.EXTRA_TITLE";
-    public static final String EXTRA_HIDE_SEEK_BAR = "FullscreenVlcPlayer.EXTRA_HIDE_SEEK_BAR";
+    public static final String EXTRA_URL = "PlayerActivity.EXTRA_URL";
+    public static final String EXTRA_TITLE = "PlayerActivity.EXTRA_TITLE";
+    public static final String EXTRA_HIDE_SEEK_BAR = "PlayerActivity.EXTRA_HIDE_SEEK_BAR";
+
+    public static final String INTENT_FILTER_NAME = "com.ewnd9.mediacenter.USER_ACTION";
+    public static final String INTENT_EXTRA_TEXT = "com.ewnd9.mediacenter.USER_ACTION.text";
 
     private LinearLayout vlcContainer;
     private PlayerView playerView;
+
+    private BroadcastReceiver myReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String text = intent.getStringExtra(INTENT_EXTRA_TEXT);
+            playerView.setSubtitlesText(text);
+        }
+    };
+
+    private IntentFilter intentFilter = new IntentFilter(INTENT_FILTER_NAME);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         getActionBar().hide();
-        setContentView(R.layout.activity_fullscreen_vlc_player);
+        setContentView(R.layout.activity_player);
 
         Bundle b = getIntent().getExtras();
 
@@ -70,13 +87,6 @@ public class FullscreenVlcPlayer extends Activity {
             }
         });
 
-        vlcContainer.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                playerView.onClick();
-            }
-        });
-
         if (!playerView.playMovie()) {
             Toast.makeText(this, "Error", Toast.LENGTH_LONG).show();
         }
@@ -85,12 +95,13 @@ public class FullscreenVlcPlayer extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        registerReceiver(myReceiver, intentFilter);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        //releasePlayer();
+        unregisterReceiver(myReceiver);
     }
 
     @Override

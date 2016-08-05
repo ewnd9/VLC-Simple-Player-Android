@@ -11,13 +11,13 @@ import com.facebook.react.views.image.ReactImageView;
 /**
  * Created by ewnd9 on 20.06.16.
  */
-public class ReactPlayerManager extends SimpleViewManager<PlayerView> {
+public class PlayerReactViewManager extends SimpleViewManager<PlayerView> {
 
     public static final String REACT_CLASS = "RCTPlayerView";
 
     Activity activity;
 
-    public ReactPlayerManager(Activity activity) {
+    public PlayerReactViewManager(Activity activity) {
         this.activity = activity;
     }
 

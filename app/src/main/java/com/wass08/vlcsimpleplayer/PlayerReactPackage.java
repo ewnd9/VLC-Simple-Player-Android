@@ -13,18 +13,18 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class VLCPlayerPackage implements ReactPackage {
+public class PlayerReactPackage implements ReactPackage {
 
     private Activity activity;
 
-    public VLCPlayerPackage(Activity activity) {
+    public PlayerReactPackage(Activity activity) {
         this.activity = activity;
     }
 
     @Override
     public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
         List<NativeModule> modules = new ArrayList<>();
-        modules.add(new VLCPlayer(reactContext));
+        modules.add(new PlayerReactModule(reactContext));
         return modules;
     }
 
@@ -37,7 +37,7 @@ public class VLCPlayerPackage implements ReactPackage {
     public List<ViewManager> createViewManagers(
             ReactApplicationContext reactContext) {
         return Arrays.<ViewManager>asList(
-                new ReactPlayerManager(activity)
+                new PlayerReactViewManager(activity)
         );
     }
 

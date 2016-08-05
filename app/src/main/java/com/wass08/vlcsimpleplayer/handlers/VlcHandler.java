@@ -6,6 +6,7 @@ import android.os.Message;
 import android.util.Log;
 
 import com.wass08.vlcsimpleplayer.PlayerView;
+import com.wass08.vlcsimpleplayer.VLCWrapper;
 
 import org.videolan.libvlc.EventHandler;
 
@@ -18,18 +19,18 @@ public class VlcHandler extends Handler {
 
     private static final String TAG = "ReactNative";
 
-    private WeakReference<PlayerView> mOwner;
+    private WeakReference<VLCWrapper> mOwner;
 
-    public VlcHandler(PlayerView owner) {
+    public VlcHandler(VLCWrapper owner) {
         mOwner = new WeakReference<>(owner);
     }
 
     @Override
     public void handleMessage(Message msg) {
-        PlayerView playerView = mOwner.get();
+        VLCWrapper playerView = mOwner.get();
 
         // Player events
-        if (msg.what == PlayerView.VIDEO_SIZE_CHANGED) {
+        if (msg.what == VLCWrapper.VIDEO_SIZE_CHANGED) {
             playerView.setSize(msg.arg1, msg.arg2);
             return;
         }
@@ -39,7 +40,7 @@ public class VlcHandler extends Handler {
 
         switch (b.getInt("event")) {
             case EventHandler.MediaPlayerEndReached:
-                playerView.releasePlayer();
+                playerView.onReleasePlayer();
                 break;
             case EventHandler.MediaPlayerPlaying:
                 Log.v(TAG, "MediaPlayerPlaying");

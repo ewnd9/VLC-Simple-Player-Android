@@ -2,7 +2,6 @@ package com.wass08.vlcsimpleplayer;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -12,13 +11,13 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 
-public class VLCPlayer extends ReactContextBaseJavaModule {
+public class PlayerReactModule extends ReactContextBaseJavaModule {
 
     private static ReactApplicationContext context;
 
-    public VLCPlayer(ReactApplicationContext reactContext) {
+    public PlayerReactModule(ReactApplicationContext reactContext) {
         super(reactContext);
-        VLCPlayer.context = reactContext;
+        PlayerReactModule.context = reactContext;
     }
 
     @Override
@@ -28,25 +27,33 @@ public class VLCPlayer extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void play(String path, String title) {
-        Intent toFullscreen = new Intent(VLCPlayer.context, FullscreenVlcPlayer.class);
+        Intent toFullscreen = new Intent(PlayerReactModule.context, PlayerActivity.class);
         Bundle b = new Bundle();
 
-        b.putString(FullscreenVlcPlayer.EXTRA_URL, path);
-        b.putString(FullscreenVlcPlayer.EXTRA_TITLE, title);
-        b.putBoolean(FullscreenVlcPlayer.EXTRA_HIDE_SEEK_BAR, true);
+        b.putString(PlayerActivity.EXTRA_URL, path);
+        b.putString(PlayerActivity.EXTRA_TITLE, title);
+        b.putBoolean(PlayerActivity.EXTRA_HIDE_SEEK_BAR, true);
 
         toFullscreen.putExtras(b); //Put your id to your next Intent
         toFullscreen.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-        VLCPlayer.context.startActivity(toFullscreen);
+        PlayerReactModule.context.startActivity(toFullscreen);
+    }
+
+    @ReactMethod
+    public void setSubtitles(String text) {
+        Intent intent = new Intent(PlayerActivity.INTENT_FILTER_NAME);
+        intent.putExtra(PlayerActivity.INTENT_EXTRA_TEXT, text);
+
+        context.sendBroadcast(intent);
     }
 
     public static void sendPositionToReact(long position, long duration) {
         WritableMap params = Arguments.createMap();
-        params.putString("position", Long.toString(position * 1000));
-        params.putString("duration", Long.toString(duration * 1000));
+        params.putString("position", Long.toString(position * 1000)); // nanoseconds
+        params.putString("duration", Long.toString(duration * 1000)); // nanoseconds
 
-        VLCPlayer.context
+        PlayerReactModule.context
             .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
             .emit("positionUpdate", params);
     }
@@ -56,7 +63,7 @@ public class VLCPlayer extends ReactContextBaseJavaModule {
         params.putString("position", Long.toString(position * 1000));
         params.putString("duration", Long.toString(duration * 1000));
 
-        VLCPlayer.context
+        PlayerReactModule.context
             .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
             .emit("markEmit", params);
     }
