@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Toast;
 
+import com.facebook.react.bridge.Callback;
 import com.wass08.vlcsimpleplayer.handlers.VlcHandler;
 
 import org.videolan.libvlc.EventHandler;
@@ -45,21 +46,26 @@ public class VLCWrapper {
     private Handler mPositionHandler = new Handler();
     private Handler mHandler = new VlcHandler(this);
 
-    private Runnable mPositionHandlerTask = new Runnable() {
-        @Override
-        public void run() {
-            if (surfaceHolder != null) {
-                PlayerReactModule.sendPositionToReact(libvlc.getTime(), libvlc.getLength()); // @TODO replace with broadcast
-                mPositionHandler.postDelayed(mPositionHandlerTask, onPositionUpdateInterval);
-            }
-        }
-    };
+    private Runnable mPositionHandlerTask;
 
-    public VLCWrapper(Context context, SurfaceView view, int onPositionUpdateInitialDelay, int onPositionUpdateInterval) {
+    public VLCWrapper(Context context, SurfaceView view, final Callback onPositionUpdate, int onPositionUpdateInitialDelay, int onPositionUpdateInterval) {
         this.context = context;
         this.surfaceView = view;
         this.onPositionUpdateInitialDelay = onPositionUpdateInitialDelay;
         this.onPositionUpdateInterval = onPositionUpdateInterval;
+
+        this.mPositionHandler = new Handler();
+        this.mHandler = new VlcHandler(this);
+
+        this.mPositionHandlerTask = new Runnable() {
+            @Override
+            public void run() {
+                if (surfaceHolder != null) {
+                    onPositionUpdate.invoke(libvlc.getTime(), libvlc.getLength());
+                    mPositionHandler.postDelayed(mPositionHandlerTask, VLCWrapper.this.onPositionUpdateInterval);
+                }
+            }
+        };
     }
 
     public void onPlayFile() {

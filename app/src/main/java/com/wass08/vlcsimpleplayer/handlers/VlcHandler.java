@@ -5,11 +5,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
-import com.wass08.vlcsimpleplayer.PlayerView;
 import com.wass08.vlcsimpleplayer.VLCWrapper;
-
 import org.videolan.libvlc.EventHandler;
-
 import java.lang.ref.WeakReference;
 
 /**
