@@ -12,6 +12,7 @@ import android.os.Message;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -47,12 +48,16 @@ public class PlayerView extends FrameLayout implements SurfaceHolder.Callback, I
     private SurfaceView mSurface;
     private SurfaceHolder holder;
 
-    private FrameLayout vlcOverlay;
+    private ViewGroup overlayLayout;
+    private ViewGroup overlayControlLayout;
     private ImageView vlcButtonPlayPause;
     private ImageView vlcMarkButton;
     private Handler handlerOverlay;
     private Runnable runnableOverlay;
+
     private TextView overlayTitle;
+    private TextView subtitlesTextView;
+    private TextView onTouchInfoTextView;
 
     private View vlcSeekBarLayout;
     private Handler handlerSeekBar;
@@ -74,6 +79,13 @@ public class PlayerView extends FrameLayout implements SurfaceHolder.Callback, I
 
     private Activity activity;
     private Callback<Boolean> onToggleFullscreen;
+
+    private boolean onTouchIsMoving = false;
+    private float onTouchOffsetX = 0;
+    private float onTouchOffsetY = 0;
+
+    private float maximumPosition = 0f;
+    private String currSubtitles;
 
     public PlayerView(Context context) {
         super(context);
@@ -112,7 +124,75 @@ public class PlayerView extends FrameLayout implements SurfaceHolder.Callback, I
         // VLC
         mSurface = (SurfaceView) findViewById(R.id.vlc_surface);
 
-        vlcOverlay = (FrameLayout) findViewById(R.id.vlc_overlay);
+        overlayLayout = (ViewGroup) findViewById(R.id.vlc_overlay);
+        overlayLayout.setOnTouchListener(new OnTouchListener() {
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    onTouchOffsetX = event.getRawX();
+                    onTouchOffsetY = event.getRawY();
+
+                    onTouchIsMoving = false;
+                    return true;
+                }
+
+                Log.v(TAG, "action " + event.getAction());
+
+                if (event.getAction() != MotionEvent.ACTION_MOVE && event.getAction() != MotionEvent.ACTION_UP) {
+                    return false;
+                }
+
+                float x = event.getRawX();
+                float y = event.getRawY();
+
+                float deltaX = Math.abs(x - onTouchOffsetX);
+                float deltaY = Math.abs(y - onTouchOffsetY);
+
+                float deltaTime = deltaX / 20;
+                boolean isFastForward = x > onTouchOffsetX;
+
+                Log.v(TAG, "deltaX " + deltaX + " " + event.getAction());
+                Log.v(TAG, "deltaTime " + ((int) deltaTime));
+
+                if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                    onTouchIsMoving = true;
+                    onTouchInfoTextView.setVisibility(View.VISIBLE);
+
+                    if (deltaX > 10) {
+                        onTouchInfoTextView.setText((isFastForward ? "+" : "-") + String.format("%.0f", deltaTime));
+                    }
+                } else if (event.getAction() == MotionEvent.ACTION_UP) {
+                    onTouchInfoTextView.setVisibility(View.GONE);
+
+                    if (deltaX < 10.0) {
+                        setOverlayVisibility(View.VISIBLE);
+
+                        handlerOverlay.removeCallbacks(runnableOverlay);
+                        handlerOverlay.postDelayed(runnableOverlay, TIME_TO_DISAPPEAR);
+
+                        return true;
+                    } else {
+                        long nowMs = libvlc.getTime();
+                        long nextMs = nowMs + ((isFastForward ? +1 : -1) * (int) deltaTime * 1000);
+
+                        if (!isFastForward) {
+                            maximumPosition = nowMs;
+                        }
+
+                        Log.v(TAG, "now " + nowMs + " " + nextMs + " " + 1);
+                        libvlc.setTime(nextMs);
+                    }
+
+                    if (onTouchIsMoving) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        });
+        overlayControlLayout = (ViewGroup) findViewById(R.id.overlay_control_layout);
 
         vlcButtonPlayPause = (ImageView) findViewById(R.id.vlc_button_play_pause);
         vlcMarkButton = (ImageView) findViewById(R.id.vlc_button_mark);
@@ -124,6 +204,8 @@ public class PlayerView extends FrameLayout implements SurfaceHolder.Callback, I
         vlcSeekBarLayout.setVisibility(View.INVISIBLE);
 
         overlayTitle = (TextView) findViewById(R.id.vlc_overlay_title);
+        subtitlesTextView = (TextView) findViewById(R.id.subtitles_text_view);
+        onTouchInfoTextView = (TextView) findViewById(R.id.on_touch_info_text_view);
     }
 
     public void init(String urlToStream, boolean hideSeekBar, String title, Callback<Boolean> onToggleFullscreen) {
@@ -166,11 +248,14 @@ public class PlayerView extends FrameLayout implements SurfaceHolder.Callback, I
                 if (libvlc != null) {
                     long curTime = libvlc.getTime();
                     long totalTime = (long) (curTime / libvlc.getPosition());
+
                     int minutes = (int) (curTime / (60 * 1000));
                     int seconds = (int) ((curTime / 1000) % 60);
                     int endMinutes = (int) (totalTime / (60 * 1000));
                     int endSeconds = (int) ((totalTime / 1000) % 60);
+
                     String duration = String.format("%02d:%02d / %02d:%02d", minutes, seconds, endMinutes, endSeconds);
+
                     vlcSeekBar.setProgress((int) (libvlc.getPosition() * 100));
                     vlcDuration.setText(duration);
                 }
@@ -203,7 +288,7 @@ public class PlayerView extends FrameLayout implements SurfaceHolder.Callback, I
         runnableOverlay = new Runnable() {
             @Override
             public void run() {
-                vlcOverlay.setVisibility(View.GONE);
+                setOverlayVisibility(View.INVISIBLE);
                 toggleFullscreen(true);
             }
         };
@@ -211,11 +296,20 @@ public class PlayerView extends FrameLayout implements SurfaceHolder.Callback, I
         handlerOverlay.postDelayed(runnableOverlay, TIME_TO_DISAPPEAR);
     }
 
-    public void onClick() {
-        vlcOverlay.setVisibility(View.VISIBLE);
+    public void setSubtitlesText(String text) {
+        float nowMs = libvlc.getTime();
 
-        handlerOverlay.removeCallbacks(runnableOverlay);
-        handlerOverlay.postDelayed(runnableOverlay, TIME_TO_DISAPPEAR);
+        if (nowMs < maximumPosition || (currSubtitles != null && currSubtitles.length() > 0 && currSubtitles.equals(text))) {
+            subtitlesTextView.setText(text);
+            currSubtitles = text;
+        } else {
+            subtitlesTextView.setText("");
+        }
+    }
+
+    private void setOverlayVisibility(int visibility) {
+        overlayControlLayout.setVisibility(visibility);
+        overlayTitle.setVisibility(visibility);
     }
 
     public boolean playMovie() {
@@ -290,7 +384,7 @@ public class PlayerView extends FrameLayout implements SurfaceHolder.Callback, I
             libvlc.setTimeStretching(true);
             libvlc.setChroma("RV32");
             libvlc.setVerboseMode(true);
-            libvlc.setNetworkCaching(10000); // 5 seconds is just a test, maximum should be lower than 60 seconds judging by github projects
+            libvlc.setNetworkCaching(60000); // 5 seconds is just a test, maximum should be lower than 60 seconds judging by github projects
             // getNetworkCaching and others getters are called from c++
 
             LibVLC.restart(getContext());
@@ -306,7 +400,7 @@ public class PlayerView extends FrameLayout implements SurfaceHolder.Callback, I
             list.add(new Media(libvlc, LibVLC.PathToURI(media)), false);
 
             libvlc.playIndex(0);
-            mPositionHandler.postDelayed(mPositionHandlerTask, 1000 * 5); // 5 seconds
+            mPositionHandler.postDelayed(mPositionHandlerTask, POSITION_UPDATE_INITIAL);
         } catch (Exception e) {
             Toast.makeText(getContext(), "Could not create Vlc Player", Toast.LENGTH_LONG).show();
         }
@@ -396,7 +490,10 @@ public class PlayerView extends FrameLayout implements SurfaceHolder.Callback, I
      * ***********
      */
     private Handler mPositionHandler = new Handler();
-    private static int POSITION_UPDATE_INTERVAL = 1000 * 30; // 30 seconds
+//    private static int POSITION_UPDATE_INTERVAL = 1000 * 30; // 30 seconds
+    private static int POSITION_UPDATE_INTERVAL = 100; // 0.1 seconds
+//    private static int POSITION_UPDATE_INITIAL = 1000 * 10; // 10 seconds
+    private static int POSITION_UPDATE_INITIAL = 50; // 0.1 seconds
 
     private Runnable mPositionHandlerTask = new Runnable() {
         @Override
@@ -429,11 +526,11 @@ public class PlayerView extends FrameLayout implements SurfaceHolder.Callback, I
     }
 
     private void showOverlay() {
-        vlcOverlay.setVisibility(View.VISIBLE);
+        setOverlayVisibility(View.VISIBLE);
     }
 
     private void hideOverlay() {
-        vlcOverlay.setVisibility(View.GONE);
+        setOverlayVisibility(View.INVISIBLE);
     }
 
     public void setUrlToStream(String urlToStream) {

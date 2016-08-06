@@ -8,6 +8,8 @@ import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.ReadableArray;
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
@@ -41,10 +43,18 @@ public class VLCPlayer extends ReactContextBaseJavaModule {
         VLCPlayer.context.startActivity(toFullscreen);
     }
 
+    @ReactMethod
+    public void setSubtitles(String text) {
+        Intent intent = new Intent(FullscreenVlcPlayer.INTENT_FILTER_NAME);
+        intent.putExtra(FullscreenVlcPlayer.INTENT_EXTRA_TEXT, text);
+
+        context.sendBroadcast(intent);
+    }
+
     public static void sendPositionToReact(long position, long duration) {
         WritableMap params = Arguments.createMap();
-        params.putString("position", Long.toString(position * 1000));
-        params.putString("duration", Long.toString(duration * 1000));
+        params.putString("position", Long.toString(position * 1000)); // nanoseconds
+        params.putString("duration", Long.toString(duration * 1000)); // nanoseconds
 
         VLCPlayer.context
             .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)

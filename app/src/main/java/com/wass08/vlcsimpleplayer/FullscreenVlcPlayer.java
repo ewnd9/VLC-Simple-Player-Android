@@ -4,8 +4,13 @@ import com.wass08.vlcsimpleplayer.util.Callback;
 import com.wass08.vlcsimpleplayer.util.SystemUiHider;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
@@ -26,8 +31,21 @@ public class FullscreenVlcPlayer extends Activity {
     public static final String EXTRA_TITLE = "FullscreenVlcPlayer.EXTRA_TITLE";
     public static final String EXTRA_HIDE_SEEK_BAR = "FullscreenVlcPlayer.EXTRA_HIDE_SEEK_BAR";
 
+    public static final String INTENT_FILTER_NAME = "com.mediacenter.USER_ACTION";
+    public static final String INTENT_EXTRA_TEXT = "com.mediacenter.USER_ACTION.text";
+
     private LinearLayout vlcContainer;
     private PlayerView playerView;
+
+    private BroadcastReceiver myReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String text = intent.getStringExtra(INTENT_EXTRA_TEXT);
+            playerView.setSubtitlesText(text);
+        }
+    };
+
+    private IntentFilter intentFilter = new IntentFilter(INTENT_FILTER_NAME);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,13 +88,6 @@ public class FullscreenVlcPlayer extends Activity {
             }
         });
 
-        vlcContainer.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                playerView.onClick();
-            }
-        });
-
         if (!playerView.playMovie()) {
             Toast.makeText(this, "Error", Toast.LENGTH_LONG).show();
         }
@@ -85,12 +96,13 @@ public class FullscreenVlcPlayer extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        registerReceiver(myReceiver, intentFilter);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        //releasePlayer();
+        unregisterReceiver(myReceiver);
     }
 
     @Override
