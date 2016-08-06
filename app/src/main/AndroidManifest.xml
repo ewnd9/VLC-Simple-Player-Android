@@ -8,13 +8,6 @@
     <application
         android:allowBackup="true"
         android:theme="@style/AppTheme" >
-
-        <activity
-            android:name="com.ewnd9.wordstv.player.PlayerActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"
-            android:label="@string/title_activity_fullscreen_vlc_player"
-            android:theme="@style/FullscreenTheme" >
-        </activity>
     </application>
 
 </manifest>
